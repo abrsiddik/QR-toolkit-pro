@@ -1,0 +1,75 @@
+🗺️ QR Toolkit Pro — Future Roadmap
+Current Version v1.5 (Responsive, Themed, API-based)
+
+
+🟢 PHASE 1 — THE TRUE OFFLINE UPDATE (Next Priority)
+Goal Remove dependency on the external goqr.me API to ensure 100% privacy and offline functionality.
+
+⚡ Client-Side Generation Replace the API call with a JavaScript library (like qrcode.js or qrious) embedded directly into the file.
+
+🏎️ Zero Latency QR codes generate instantly (0ms) as you type, with no network request.
+
+💾 SVG Support Allow downloading as Vector (SVG) for print professionals, not just PNG.
+
+Why this matters Currently, if the user loses internet, the app stops generating. Moving logic to the browser makes it bulletproof.
+
+
+
+🟡 PHASE 2 — APP-IFICATION (PWA)
+Goal Make the tool installable on iOS and Android.
+
+📱 Web Manifest Embed a manifest.json (as a Data URI) to define the app name, icons, and theme color.
+
+🏠 Home Screen Install Allow users to Add to Home Screen to launch it fullscreen without the browser address bar.
+
+🛑 Offline Service Worker Cache the HTML file so it loads instantly even in Airplane Mode.
+
+
+
+🔵 PHASE 3 — DATA EXPANSION
+Goal Support niche and power-user use cases.
+
+📅 Event QR Add .ics  Calendar event support (Title, Date, Location).
+
+₿ Crypto BitcoinEthereum wallet address formatting.
+
+💬 Social Pre-filled WhatsApp and Telegram message links.
+
+📍 Geo-Location Open specific coordinates in GoogleApple Maps.
+
+🔢 Bulk Generation (Advanced) Upload a CSV list of names - Download a ZIP of QR codes.
+
+
+
+🟣 PHASE 4 — THE SCANNER UPDATE
+Goal Close the loop (Create & Read).
+
+📷 Camera Access Add a Scan tab that opens the device camera.
+
+🖼️ Image Scan Upload a screenshot of a QR code to decode it.
+
+🔗 History Integration Scanned codes get saved to the same History tab as generated ones.
+
+Note This requires a larger library (like html5-qrcode), which challenges the Single File constraint but is possible via CDN.
+
+
+
+🔴 PHASE 5 — DESIGNER SUITE
+Goal Aesthetic controls for branding professionals.
+
+🎨 Gradient QRs Instead of solid black, allow gradient fills on the QR data modules.
+
+🟢 Dot Styles Change squares to dots, rounded corners, or diamonds.
+
+👁️ Eye Customization Color the 3 corner eyes differently than the data dots.
+
+🖼️ Frame Gallery Add Scan Me frames around the QR code.
+
+🧠 TECHNICAL DEBT & MAINTENANCE
+To keep the project healthy as you scale
+
+Code Splitting (Conceptual) Even though it is one file, keep CSS, JS, and HTML clearly commented and sectioned (as I have done).
+
+Asset Management If you add many icons or libraries, consider using a build tool that compiles into a single HTML file, rather than editing a 2000-line HTML file manually.
+
+Local Storage Limits Monitor history size. If users generate images, localStorage will fill up. Stick to saving text data only.

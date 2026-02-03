@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QR Toolkit Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617', 
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* --- CORE UTILITIES --- */
+        body {
+            /* Fix for mobile address bar scrolling issues */
+            height: 100vh; 
+            height: 100dvh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: background 0.5s ease, border 0.5s ease;
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Hide scrollbar for tabs but allow scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 20px; }
+        
+        input, textarea, select, button { transition: all 0.2s ease-in-out; }
+        
+        /* Prevent iOS Zoom on focus by ensuring font size is adequate */
+        @media screen and (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+
+        /* --- THEME BACKGROUNDS --- */
+        .theme-bg-nebula {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .nebula-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
+            animation: blob 20s infinite alternate;
+        }
+
+        .theme-bg-grid {
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 255, 170, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 170, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .theme-bg-grid::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, #050505 90%);
+        }
+
+        .theme-bg-sunset {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            position: fixed; inset: 0; z-index: -1;
+        }
+        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .theme-bg-arctic {
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .dark .theme-bg-arctic { background-color: #334155; }
+    </style>
+</head>
+<body class="text-slate-800 overflow-hidden flex selection:bg-brand-500 selection:text-white dark:text-gray-100 transition-colors duration-300">
+
+    <!-- DYNAMIC BACKGROUND -->
+    <div id="bg-container">
+        <div class="theme-bg-nebula transition-opacity duration-1000" id="bg-nebula">
+            <div class="nebula-blob bg-purple-500 w-64 h-64 md:w-96 md:h-96 top-0 left-0 mix-blend-multiply dark:mix-blend-screen opacity-30"></div>
+            <div class="nebula-blob bg-blue-500 w-64 h-64 md:w-96 md:h-96 bottom-0 right-0 mix-blend-multiply dark:mix-blend-screen opacity-30 animation-delay-2000"></div>
+            <div class="nebula-blob bg-pink-500 w-48 h-48 md:w-80 md:h-80 top-1/2 left-1/2 mix-blend-multiply dark:mix-blend-screen opacity-30 animation-delay-4000 transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        <div class="theme-bg-grid opacity-0 transition-opacity duration-1000" id="bg-grid"></div>
+        <div class="theme-bg-sunset opacity-0 transition-opacity duration-1000" id="bg-sunset"></div>
+        <div class="theme-bg-arctic opacity-0 transition-opacity duration-1000" id="bg-arctic"></div>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="mobileBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden transition-opacity opacity-0 md:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar (History) -->
+    <aside class="fixed inset-y-0 left-0 w-[85vw] max-w-xs md:w-80 glass-panel border-r-0 border-r border-gray-200 dark:border-gray-800 flex flex-col transform transition-transform duration-300 -translate-x-full md:relative md:translate-x-0 z-40 shadow-2xl md:shadow-none" id="sidebar">
+        <div class="p-5 md:p-6 border-b border-gray-200/50 dark:border-gray-700/50 flex justify-between items-center">
+            <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-purple-600 flex items-center gap-3">
+                <i class="fa-solid fa-cube text-brand-600 text-xl"></i> QR Pro
+            </h2>
+            <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors">
+                <i class="fa-solid fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-4 bg-gray-50/20 dark:bg-gray-800/20">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History
+                </h3>
+                <button onclick="clearHistory()" class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors hover:underline px-2 py-1">Clear</button>
+            </div>
+        </div>
+
+        <div id="historyList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+            <!-- Injected Items -->
+        </div>
+        
+        <div class="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
+             <div class="text-[10px] text-center text-gray-400">
+                100% Client-Side • Privacy First
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative w-full z-10 min-w-0">
+        <!-- Header -->
+        <header class="glass-panel border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 md:px-6 py-3 md:py-4 shadow-sm z-20 mx-0 md:mx-4 md:mt-4 md:rounded-xl sticky top-0 md:relative">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 dark:text-gray-300 p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="font-bold text-base md:text-lg text-gray-800 dark:text-white leading-tight">Dashboard</h1>
+                    <p class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Design & Generate</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 md:gap-3">
+                <!-- Theme Selector -->
+                <div class="relative group">
+                    <button class="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-white/50 dark:bg-black/20 rounded-lg hover:bg-white/80 dark:hover:bg-black/40 transition-colors border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300">
+                        <i class="fa-solid fa-palette"></i> <span class="hidden sm:inline">Theme</span>
+                    </button>
+                    <!-- Dropdown -->
+                    <div class="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden hidden group-hover:block active:block transition-all z-50">
+                        <button onclick="setTheme('nebula')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Nebula
+                        </button>
+                        <button onclick="setTheme('grid')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-green-400"></span> Cyber
+                        </button>
+                        <button onclick="setTheme('sunset')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-orange-400"></span> Sunset
+                        </button>
+                        <button onclick="setTheme('arctic')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span> Arctic
+                        </button>
+                    </div>
+                </div>
+
+                <div class="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
+
+                <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-white/50 dark:bg-black/20 shadow-sm border border-gray-200/50 dark:border-gray-700/50 flex items-center justify-center text-gray-600 dark:text-yellow-400 transition-all hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pb-20 md:pb-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+                
+                <!-- LEFT COLUMN: Inputs -->
+                <div class="lg:col-span-7 space-y-4 md:space-y-6 animate-fade-in order-1">
+                    
+                    <!-- 1. Type Selector (Tabs) -->
+                    <div class="glass-panel bg-white/60 dark:bg-dark-800/60 rounded-xl p-1.5 shadow-sm flex overflow-x-auto gap-1 no-scrollbar touch-pan-x" id="typeTabs">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- 2. Dynamic Input Form -->
+                    <div class="glass-panel bg-white/80 dark:bg-dark-800/80 rounded-2xl p-4 md:p-6 shadow-lg border-t-4 border-brand-500">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2" id="formTitle">
+                                <!-- Icon + Title -->
+                            </h3>
+                            <span class="text-[10px] md:text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-md font-medium" id="typeBadge">URL</span>
+                        </div>
+                        
+                        <div id="dynamicInputs" class="space-y-4">
+                            <!-- Inputs injected here -->
+                        </div>
+                    </div>
+
+                    <!-- 3. Appearance Options -->
+                    <div class="glass-panel bg-white/40 dark:bg-dark-800/40 rounded-2xl p-4 md:p-6 shadow-sm">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Visual Controls</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                            <!-- Colors -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Foreground</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="colorInput" value="#000000" class="h-10 w-12 rounded-lg cursor-pointer border-0 p-1 bg-white/50 dark:bg-black/20 shadow-sm">
+                                        <input type="text" id="colorHex" value="#000000" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-black/20 text-xs font-mono uppercase" readonly>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Background</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="bgColorInput" value="#ffffff" class="h-10 w-12 rounded-lg cursor-pointer border-0 p-1 bg-white/50 dark:bg-black/20 shadow-sm">
+                                        <input type="text" id="bgColorHex" value="#ffffff" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-black/20 text-xs font-mono uppercase" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Size & Logo -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">
+                                        Resolution: <span id="sizeValue" class="text-brand-600 font-bold">300px</span>
+                                    </label>
+                                    <input type="range" id="sizeInput" min="200" max="1000" step="50" value="300"
+                                        class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-500 touch-none">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Branding (Logo)</label>
+                                    <div class="relative">
+                                        <input type="file" id="logoInput" accept="image/*" class="hidden">
+                                        <label for="logoInput" class="flex items-center justify-center w-full px-4 py-2.5 border border-dashed border-gray-400 dark:border-gray-600 rounded-lg cursor-pointer hover:border-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all group bg-white/20 dark:bg-black/20 active:scale-95">
+                                            <div class="text-center truncate">
+                                                <i class="fa-solid fa-image text-gray-400 group-hover:text-brand-500 mr-2"></i>
+                                                <span class="text-xs text-gray-500 group-hover:text-brand-600" id="logoFileName">Upload PNG/JPG</span>
+                                            </div>
+                                        </label>
+                                        <button onclick="removeLogo()" id="removeLogoBtn" class="hidden absolute right-2 top-2 text-red-500 hover:bg-red-50 p-1 rounded z-10">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Preview -->
+                <div class="lg:col-span-5 order-2">
+                    <div class="lg:sticky lg:top-6 space-y-4">
+                        <div class="glass-panel bg-white/70 dark:bg-dark-800/70 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700 overflow-hidden relative group">
+                            <!-- Preview Header -->
+                            <div class="px-6 py-4 border-b border-gray-100/50 dark:border-gray-700/50 flex justify-between items-center bg-gray-50/30 dark:bg-gray-700/30">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-xs uppercase tracking-wide">Output Preview</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                    <span class="text-[10px] text-gray-500 font-medium">Auto-Sync</span>
+                                </div>
+                            </div>
+
+                            <!-- Canvas Area -->
+                            <div class="p-6 md:p-10 flex flex-col items-center justify-center min-h-[350px] md:min-h-[420px] bg-white/50 dark:bg-black/40 relative transition-colors">
+                                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                
+                                <!-- The Container for Visual Preview -->
+                                <div id="qrPreviewWrapper" class="relative transition-all duration-300 transform group-hover:scale-[1.02] z-10 max-w-[250px] md:max-w-full">
+                                    <!-- 1. The QR Image (from API) -->
+                                    <img id="qrImage" src="" alt="QR Code" class="rounded-lg shadow-2xl hidden w-full h-auto" crossorigin="anonymous">
+                                    
+                                    <!-- 2. The Logo Overlay (Visual Only) -->
+                                    <img id="logoOverlay" src="" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[22%] h-[22%] object-contain hidden pointer-events-none rounded-md bg-white p-0.5 md:p-1 shadow-sm">
+
+                                    <!-- Placeholder -->
+                                    <div id="qrPlaceholder" class="text-gray-400 flex flex-col items-center animate-pulse">
+                                        <i class="fa-solid fa-qrcode text-5xl md:text-6xl mb-4 opacity-40"></i>
+                                        <p class="font-medium text-[10px] md:text-xs tracking-wider opacity-60">WAITING FOR INPUT</p>
+                                    </div>
+
+                                    <!-- Loader -->
+                                    <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-[2px] rounded-lg hidden z-20">
+                                        <div class="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="p-4 md:p-6 bg-white/50 dark:bg-dark-800/50 border-t border-gray-100/50 dark:border-gray-700/50 backdrop-blur-sm">
+                                <button onclick="downloadQR()" id="downloadBtn" disabled 
+                                    class="w-full py-3.5 px-4 bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-700 hover:to-blue-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 text-sm md:text-base">
+                                    <i class="fa-solid fa-download"></i> Download PNG
+                                </button>
+                                <p class="text-[10px] text-center text-gray-400 mt-3 hidden md:block">
+                                    Generated client-side • High Resolution
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Canvas for Image Composition (Hidden) -->
+    <canvas id="compositionCanvas" class="hidden"></canvas>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto md:w-auto transform translate-y-24 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <div class="glass-panel bg-dark-900/95 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 border border-gray-700 mx-auto w-fit">
+            <div id="toastIcon" class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 text-xs">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm" id="toastTitle">Success</h4>
+                <p class="text-[10px] text-gray-300" id="toastMsg">Action completed</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const API_BASE = 'https://api.qrserver.com/v1/create-qr-code/';
+        const state = {
+            type: 'url',
+            data: {},
+            theme: localStorage.getItem('qr_theme') || 'nebula',
+            config: {
+                size: 300,
+                color: '000000',
+                bgcolor: 'ffffff',
+                logo: null
+            },
+            history: JSON.parse(localStorage.getItem('qr_toolkit_history')) || []
+        };
+
+        // --- Configuration: Input Definitions ---
+        const TYPE_CONFIG = {
+            url: {
+                icon: 'fa-link',
+                label: 'Link / URL',
+                fields: [
+                    { id: 'url', type: 'url', placeholder: 'https://example.com', label: 'Website URL' }
+                ]
+            },
+            wifi: {
+                icon: 'fa-wifi',
+                label: 'WiFi',
+                fields: [
+                    { id: 'ssid', type: 'text', placeholder: 'Network Name', label: 'Network Name (SSID)' },
+                    { id: 'password', type: 'text', placeholder: 'Password', label: 'Password' },
+                    { id: 'encryption', type: 'select', label: 'Security', options: ['WPA/WPA2', 'WEP', 'nopass'] }
+                ]
+            },
+            vcard: {
+                icon: 'fa-address-card',
+                label: 'Contact',
+                fields: [
+                    { id: 'fname', type: 'text', placeholder: 'John', label: 'First Name', width: 'half' },
+                    { id: 'lname', type: 'text', placeholder: 'Doe', label: 'Last Name', width: 'half' },
+                    { id: 'phone', type: 'tel', placeholder: '+1 234 567 890', label: 'Phone' },
+                    { id: 'email', type: 'email', placeholder: 'john@example.com', label: 'Email' },
+                    { id: 'org', type: 'text', placeholder: 'Company Inc.', label: 'Organization' }
+                ]
+            },
+            email: {
+                icon: 'fa-envelope',
+                label: 'Email',
+                fields: [
+                    { id: 'email_to', type: 'email', placeholder: 'recipient@example.com', label: 'Recipient' },
+                    { id: 'email_sub', type: 'text', placeholder: 'Subject Line', label: 'Subject' },
+                    { id: 'email_body', type: 'textarea', placeholder: 'Message body...', label: 'Message' }
+                ]
+            },
+            text: {
+                icon: 'fa-align-left',
+                label: 'Plain Text',
+                fields: [
+                    { id: 'plain_text', type: 'textarea', placeholder: 'Enter your text here...', label: 'Content' }
+                ]
+            }
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            typeTabs: document.getElementById('typeTabs'),
+            dynamicInputs: document.getElementById('dynamicInputs'),
+            formTitle: document.getElementById('formTitle'),
+            typeBadge: document.getElementById('typeBadge'),
+            qrImage: document.getElementById('qrImage'),
+            qrWrapper: document.getElementById('qrPreviewWrapper'),
+            logoOverlay: document.getElementById('logoOverlay'),
+            placeholder: document.getElementById('qrPlaceholder'),
+            loader: document.getElementById('loader'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            sizeInput: document.getElementById('sizeInput'),
+            sizeValue: document.getElementById('sizeValue'),
+            colorInput: document.getElementById('colorInput'),
+            colorHex: document.getElementById('colorHex'),
+            bgInput: document.getElementById('bgColorInput'),
+            bgHex: document.getElementById('bgColorHex'),
+            logoInput: document.getElementById('logoInput'),
+            logoFileName: document.getElementById('logoFileName'),
+            removeLogoBtn: document.getElementById('removeLogoBtn'),
+            historyList: document.getElementById('historyList'),
+            sidebar: document.getElementById('sidebar'),
+            backdrop: document.getElementById('mobileBackdrop'),
+            html: document.documentElement
+        };
+
+        // --- Initialization ---
+        function init() {
+            renderTabs();
+            renderInputs('url');
+            renderHistory();
+            setupEventListeners();
+            
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                els.html.classList.add('dark');
+            }
+            setTheme(state.theme);
+        }
+
+        // --- Theme Engine ---
+        function setTheme(themeName) {
+            state.theme = themeName;
+            localStorage.setItem('qr_theme', themeName);
+            ['bg-nebula', 'bg-grid', 'bg-sunset', 'bg-arctic'].forEach(id => {
+                document.getElementById(id).classList.add('opacity-0');
+            });
+            const activeBg = document.getElementById(`bg-${themeName}`);
+            if(activeBg) activeBg.classList.remove('opacity-0');
+        }
+
+        function toggleDarkMode() {
+            els.html.classList.toggle('dark');
+        }
+
+        // --- Responsive Sidebar ---
+        function toggleSidebar() {
+            const isClosed = els.sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                // Open
+                els.sidebar.classList.remove('-translate-x-full');
+                els.backdrop.classList.remove('hidden');
+                setTimeout(() => els.backdrop.classList.remove('opacity-0'), 10);
+            } else {
+                // Close
+                els.sidebar.classList.add('-translate-x-full');
+                els.backdrop.classList.add('opacity-0');
+                setTimeout(() => els.backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        function setupEventListeners() {
+            els.sizeInput.addEventListener('input', (e) => {
+                state.config.size = e.target.value;
+                els.sizeValue.innerText = `${state.config.size}px`;
+                debouncedGenerate();
+            });
+
+            els.colorInput.addEventListener('input', (e) => {
+                state.config.color = e.target.value.replace('#', '');
+                els.colorHex.value = e.target.value.toUpperCase();
+                debouncedGenerate();
+            });
+
+            els.bgInput.addEventListener('input', (e) => {
+                state.config.bgcolor = e.target.value.replace('#', '');
+                els.bgHex.value = e.target.value.toUpperCase();
+                debouncedGenerate();
+            });
+
+            els.logoInput.addEventListener('change', handleLogoUpload);
+        }
+
+        // --- Dynamic UI Generation ---
+        function renderTabs() {
+            els.typeTabs.innerHTML = Object.keys(TYPE_CONFIG).map(key => {
+                const conf = TYPE_CONFIG[key];
+                return `
+                    <button onclick="switchType('${key}')" 
+                        class="tab-btn flex-shrink-0 flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all ${state.type === key ? 'bg-brand-500 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}">
+                        <i class="fa-solid ${conf.icon}"></i> ${conf.label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function switchType(type) {
+            state.type = type;
+            state.data = {}; 
+            renderTabs(); 
+            renderInputs(type);
+            showPlaceholder();
+        }
+
+        function renderInputs(type) {
+            const config = TYPE_CONFIG[type];
+            els.formTitle.innerHTML = `<i class="fa-solid ${config.icon} text-brand-500"></i> ${config.label}`;
+            els.typeBadge.innerText = type.toUpperCase();
+
+            els.dynamicInputs.innerHTML = config.fields.map(field => {
+                const widthClass = field.width === 'half' ? 'col-span-1' : 'col-span-2';
+                let inputHtml = '';
+                
+                const baseClass = "w-full px-4 py-3 rounded-xl border border-gray-200/60 dark:border-gray-600/60 bg-white/40 dark:bg-black/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all backdrop-blur-sm";
+
+                if (field.type === 'textarea') {
+                    inputHtml = `<textarea id="inp_${field.id}" rows="3" class="${baseClass} resize-none" placeholder="${field.placeholder}"></textarea>`;
+                } else if (field.type === 'select') {
+                    inputHtml = `
+                        <select id="inp_${field.id}" class="${baseClass}">
+                            ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>`;
+                } else {
+                    inputHtml = `<input type="${field.type}" id="inp_${field.id}" class="${baseClass}" placeholder="${field.placeholder}">`;
+                }
+
+                return `
+                    <div class="${widthClass}">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 ml-1 uppercase tracking-wide">${field.label}</label>
+                        ${inputHtml}
+                    </div>
+                `;
+            }).join('');
+
+            if (config.fields.some(f => f.width === 'half')) {
+                els.dynamicInputs.className = 'grid grid-cols-2 gap-3 md:gap-4';
+            } else {
+                els.dynamicInputs.className = 'space-y-3 md:space-y-4';
+            }
+
+            config.fields.forEach(field => {
+                const input = document.getElementById(`inp_${field.id}`);
+                input.addEventListener('input', (e) => {
+                    state.data[field.id] = e.target.value;
+                    debouncedGenerate();
+                });
+            });
+        }
+
+        // --- Logic: Data Formatting ---
+        function getFormattedData() {
+            const d = state.data;
+            switch (state.type) {
+                case 'url': return d.url || '';
+                case 'wifi':
+                    if (!d.ssid) return '';
+                    return `WIFI:T:${d.encryption || 'WPA'};S:${d.ssid};P:${d.password || ''};;`;
+                case 'email':
+                    if (!d.email_to) return '';
+                    return `mailto:${d.email_to}?subject=${encodeURIComponent(d.email_sub || '')}&body=${encodeURIComponent(d.email_body || '')}`;
+                case 'vcard':
+                    if (!d.fname && !d.phone) return '';
+                    return `BEGIN:VCARD\nVERSION:3.0\nN:${d.lname || ''};${d.fname || ''};;;\nFN:${d.fname || ''} ${d.lname || ''}\nORG:${d.org || ''}\nTEL:${d.phone || ''}\nEMAIL:${d.email || ''}\nEND:VCARD`;
+                case 'text': return d.plain_text || '';
+                default: return '';
+            }
+        }
+
+        // --- QR Generation ---
+        let generateTimeout;
+        function debouncedGenerate() {
+            clearTimeout(generateTimeout);
+            generateTimeout = setTimeout(generateQR, 600);
+        }
+
+        function generateQR() {
+            const dataString = getFormattedData();
+            if (!dataString || dataString.length < 2) {
+                showPlaceholder();
+                return;
+            }
+
+            els.loader.classList.remove('hidden');
+            const ecc = state.config.logo ? 'H' : 'M';
+            const url = `${API_BASE}?size=${state.config.size}x${state.config.size}&data=${encodeURIComponent(dataString)}&color=${state.config.color}&bgcolor=${state.config.bgcolor}&margin=1&ecc=${ecc}`;
+
+            const imgObj = new Image();
+            imgObj.onload = () => {
+                els.qrImage.src = url;
+                els.qrImage.classList.remove('hidden');
+                els.placeholder.classList.add('hidden');
+                els.loader.classList.add('hidden');
+                els.downloadBtn.disabled = false;
+                addToHistory(state.type, dataString);
+            };
+            imgObj.onerror = () => {
+                showToast('API Error', 'Failed to generate QR', true);
+                els.loader.classList.add('hidden');
+            };
+            imgObj.crossOrigin = "Anonymous";
+            imgObj.src = url;
+        }
+
+        function showPlaceholder() {
+            els.qrImage.classList.add('hidden');
+            els.placeholder.classList.remove('hidden');
+            els.downloadBtn.disabled = true;
+        }
+
+        // --- Logo Handling ---
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                state.config.logo = event.target.result;
+                els.logoOverlay.src = state.config.logo;
+                els.logoOverlay.classList.remove('hidden');
+                els.logoFileName.innerText = file.name.substring(0, 15) + (file.name.length > 15 ? '...' : '');
+                els.removeLogoBtn.classList.remove('hidden');
+                debouncedGenerate();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeLogo() {
+            state.config.logo = null;
+            els.logoInput.value = '';
+            els.logoOverlay.classList.add('hidden');
+            els.logoFileName.innerText = 'Upload PNG/JPG';
+            els.removeLogoBtn.classList.add('hidden');
+            debouncedGenerate();
+        }
+
+        // --- Download Logic ---
+        function downloadQR() {
+            const btn = els.downloadBtn;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const size = parseInt(state.config.size);
+            canvas.width = size;
+            canvas.height = size;
+
+            const qrImg = new Image();
+            qrImg.crossOrigin = "Anonymous";
+            qrImg.src = els.qrImage.src;
+            
+            qrImg.onload = () => {
+                ctx.drawImage(qrImg, 0, 0, size, size);
+                if (state.config.logo) {
+                    const logoImg = new Image();
+                    logoImg.src = state.config.logo;
+                    logoImg.onload = () => {
+                        const logoSize = size * 0.22;
+                        const center = (size - logoSize) / 2;
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(center - 2, center - 2, logoSize + 4, logoSize + 4);
+                        ctx.drawImage(logoImg, center, center, logoSize, logoSize);
+                        triggerDownload(canvas);
+                    };
+                } else {
+                    triggerDownload(canvas);
+                }
+            };
+            
+            function triggerDownload(c) {
+                const link = document.createElement('a');
+                link.download = `qr-toolkit-${state.type}-${Date.now()}.png`;
+                link.href = c.toDataURL('image/png');
+                link.click();
+                btn.innerHTML = originalText;
+                showToast('Success', 'QR Code saved to device');
+            }
+        }
+
+        // --- History ---
+        function addToHistory(type, data) {
+            if (state.history.length > 0 && state.history[0].data === data) return;
+            state.history.unshift({ id: Date.now(), type, data, date: new Date().toLocaleDateString() });
+            if (state.history.length > 20) state.history.pop();
+            localStorage.setItem('qr_toolkit_history', JSON.stringify(state.history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            els.historyList.innerHTML = state.history.length ? '' : '<div class="text-center text-gray-400 py-10 text-xs">No history yet</div>';
+            state.history.forEach(item => {
+                const config = TYPE_CONFIG[item.type] || TYPE_CONFIG['text'];
+                const div = document.createElement('div');
+                div.className = 'group p-3 glass-panel bg-white/50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-brand-500 cursor-pointer transition-all active:scale-95';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                            <i class="fa-solid ${config.icon} text-xs"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">${item.type.toUpperCase()}</p>
+                            <p class="text-[10px] text-gray-400 truncate">${item.data}</p>
+                        </div>
+                    </div>
+                `;
+                els.historyList.appendChild(div);
+            });
+        }
+        
+        function clearHistory() {
+            state.history = [];
+            localStorage.setItem('qr_toolkit_history', JSON.stringify([]));
+            renderHistory();
+        }
+
+        function showToast(title, msg, isError = false) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMsg').innerText = msg;
+            document.getElementById('toastIcon').className = `w-6 h-6 rounded-full flex items-center justify-center ${isError ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} text-xs`;
+            document.getElementById('toastIcon').innerHTML = `<i class="fa-solid ${isError ? 'fa-exclamation' : 'fa-check'}"></i>`;
+            t.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-24', 'opacity-0'), 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
