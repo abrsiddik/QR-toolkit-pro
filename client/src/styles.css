@@ -1,0 +1,150 @@
+        /* --- CORE UTILITIES --- */
+        body {
+            /* Fix for mobile address bar scrolling issues */
+            height: 100vh; 
+            height: 100dvh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: background 0.5s ease, border 0.5s ease;
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Hide scrollbar for tabs but allow scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 20px; }
+        
+        input, textarea, select, button { transition: all 0.2s ease-in-out; }
+        
+        /* Prevent iOS Zoom on focus by ensuring font size is adequate */
+        @media screen and (max-width: 768px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+
+        /* --- THEME BACKGROUNDS --- */
+        .theme-bg-nebula {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .nebula-blob {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
+            animation: blob 20s infinite alternate;
+        }
+
+        .theme-bg-grid {
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 255, 170, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 170, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .theme-bg-grid::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, #050505 90%);
+        }
+
+        .theme-bg-sunset {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            position: fixed; inset: 0; z-index: -1;
+        }
+        @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .theme-bg-arctic {
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            position: fixed; inset: 0; z-index: -1;
+        }
+        .dark .theme-bg-arctic { background-color: #334155; }
+
+        .input-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25);
+        }
+        .input-valid:not(:placeholder-shown) {
+            border-color: #22c55e !important;
+        }
+        .field-error { color: #ef4444; font-size: 0.65rem; margin-top: 0.25rem; margin-left: 0.25rem; }
+        #qr-reader video { border-radius: 0.75rem; }
+        #qr-reader__scan_region { border-radius: 0.75rem !important; }
+        #qr-reader__dashboard_section_csr button {
+            padding: 0.5rem 1rem !important;
+            border-radius: 0.5rem !important;
+            font-size: 0.75rem !important;
+        }
+
+        .mode-switcher {
+            padding: 0.35rem;
+            border-radius: 0.875rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.1);
+        }
+        .dark .mode-switcher {
+            background: rgba(15, 23, 42, 0.92);
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+        }
+        .mode-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 2.75rem;
+            padding: 0.625rem 1.125rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border-radius: 0.625rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .mode-btn i { font-size: 1rem; }
+        @media (min-width: 768px) {
+            .mode-btn {
+                min-height: 3rem;
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9375rem;
+            }
+            .mode-btn i { font-size: 1.0625rem; }
+        }
+        .mode-btn--active-create {
+            color: #fff;
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+            box-shadow: 0 3px 14px rgba(2, 132, 199, 0.45);
+        }
+        .mode-btn--active-scan {
+            color: #fff;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            box-shadow: 0 3px 14px rgba(124, 58, 237, 0.45);
+        }
+        .mode-btn--inactive {
+            color: #475569;
+            background: transparent;
+        }
+        .dark .mode-btn--inactive { color: #cbd5e1; }
+        .mode-btn--inactive:hover {
+            background: rgba(241, 245, 249, 0.9);
+            color: #0f172a;
+        }
+        .dark .mode-btn--inactive:hover {
+            background: rgba(51, 65, 85, 0.8);
+            color: #f8fafc;
+        }

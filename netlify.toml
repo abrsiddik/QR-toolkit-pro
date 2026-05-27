@@ -1,0 +1,17 @@
+[build]
+  publish = "client"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["server/services/**"]
+
+# API → serverless function (URL stays /api/* in the browser)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true

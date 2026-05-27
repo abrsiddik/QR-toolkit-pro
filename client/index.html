@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QR Toolkit Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617', 
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/src/styles.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body class="text-slate-800 overflow-hidden flex selection:bg-brand-500 selection:text-white dark:text-gray-100 transition-colors duration-300">
+
+    <!-- DYNAMIC BACKGROUND -->
+    <div id="bg-container">
+        <div class="theme-bg-nebula transition-opacity duration-1000" id="bg-nebula">
+            <div class="nebula-blob bg-purple-500 w-64 h-64 md:w-96 md:h-96 top-0 left-0 mix-blend-multiply dark:mix-blend-screen opacity-30"></div>
+            <div class="nebula-blob bg-blue-500 w-64 h-64 md:w-96 md:h-96 bottom-0 right-0 mix-blend-multiply dark:mix-blend-screen opacity-30 animation-delay-2000"></div>
+            <div class="nebula-blob bg-pink-500 w-48 h-48 md:w-80 md:h-80 top-1/2 left-1/2 mix-blend-multiply dark:mix-blend-screen opacity-30 animation-delay-4000 transform -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+        <div class="theme-bg-grid opacity-0 transition-opacity duration-1000" id="bg-grid"></div>
+        <div class="theme-bg-sunset opacity-0 transition-opacity duration-1000" id="bg-sunset"></div>
+        <div class="theme-bg-arctic opacity-0 transition-opacity duration-1000" id="bg-arctic"></div>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="mobileBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden transition-opacity opacity-0 md:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar (History) -->
+    <aside class="fixed inset-y-0 left-0 w-[85vw] max-w-xs md:w-80 glass-panel border-r-0 border-r border-gray-200 dark:border-gray-800 flex flex-col transform transition-transform duration-300 -translate-x-full md:relative md:translate-x-0 z-40 shadow-2xl md:shadow-none" id="sidebar">
+        <div class="p-5 md:p-6 border-b border-gray-200/50 dark:border-gray-700/50 flex justify-between items-center">
+            <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-purple-600 flex items-center gap-3">
+                <i class="fa-solid fa-cube text-brand-600 text-xl"></i> QR Pro
+            </h2>
+            <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors">
+                <i class="fa-solid fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-4 bg-gray-50/20 dark:bg-gray-800/20">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History
+                </h3>
+                <button onclick="clearHistory()" class="text-xs text-red-500 hover:text-red-600 font-medium transition-colors hover:underline px-2 py-1">Clear</button>
+            </div>
+        </div>
+
+        <div id="historyList" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+            <!-- Injected Items -->
+        </div>
+        
+        <div class="p-4 border-t border-gray-200/50 dark:border-gray-700/50">
+             <div class="text-[10px] text-center text-gray-400">
+                Full-Stack • Server QR • Local Scan
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative w-full z-10 min-w-0">
+        <!-- Header -->
+        <header class="glass-panel border-b border-gray-200/50 dark:border-gray-800/50 flex items-center justify-between px-4 md:px-6 py-3 md:py-4 shadow-sm z-20 mx-0 md:mx-4 md:mt-4 md:rounded-xl sticky top-0 md:relative">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-600 dark:text-gray-300 p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors active:scale-95">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="font-bold text-base md:text-lg text-gray-800 dark:text-white leading-tight" id="headerTitle">Dashboard</h1>
+                    <p class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 hidden sm:block" id="headerSubtitle">Design & Generate</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap justify-end">
+                <div class="mode-switcher flex gap-1">
+                    <button type="button" id="modeGenerateBtn" onclick="setViewMode('generate')"
+                        class="mode-btn mode-btn--active-create">
+                        <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i> Create
+                    </button>
+                    <button type="button" id="modeScanBtn" onclick="setViewMode('scan')"
+                        class="mode-btn mode-btn--inactive">
+                        <i class="fa-solid fa-camera" aria-hidden="true"></i> Scan
+                    </button>
+                </div>
+
+                <div class="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
+
+                <!-- Theme Selector -->
+                <div class="relative group">
+                    <button class="flex items-center gap-2 px-3 py-2 text-xs font-medium bg-white/50 dark:bg-black/20 rounded-lg hover:bg-white/80 dark:hover:bg-black/40 transition-colors border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300">
+                        <i class="fa-solid fa-palette"></i> <span class="hidden sm:inline">Theme</span>
+                    </button>
+                    <!-- Dropdown -->
+                    <div class="absolute right-0 top-full mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden hidden group-hover:block active:block transition-all z-50">
+                        <button onclick="setTheme('nebula')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Nebula
+                        </button>
+                        <button onclick="setTheme('grid')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-green-400"></span> Cyber
+                        </button>
+                        <button onclick="setTheme('sunset')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                            <span class="w-2 h-2 rounded-full bg-orange-400"></span> Sunset
+                        </button>
+                        <button onclick="setTheme('arctic')" class="w-full text-left px-4 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span> Arctic
+                        </button>
+                    </div>
+                </div>
+
+                <div class="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
+
+                <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-white/50 dark:bg-black/20 shadow-sm border border-gray-200/50 dark:border-gray-700/50 flex items-center justify-center text-gray-600 dark:text-yellow-400 transition-all hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pb-20 md:pb-8">
+            <!-- QR Scanner View -->
+            <div id="scanView" class="max-w-3xl mx-auto hidden animate-fade-in">
+                <div class="glass-panel bg-white/80 dark:bg-dark-800/80 rounded-2xl p-4 md:p-6 shadow-lg border-t-4 border-purple-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base md:text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-camera text-purple-500"></i> QR Scanner
+                        </h3>
+                        <span class="text-[10px] md:text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 px-2 py-1 rounded-md font-medium" id="scannerStatus">Ready</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Point your camera at a QR code. Scanning runs entirely in your browser.</p>
+                    <div id="qr-reader" class="w-full overflow-hidden rounded-xl bg-black/20 min-h-[240px]"></div>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <button type="button" id="scannerToggleBtn" onclick="toggleScanner()"
+                            class="flex-1 min-w-[140px] py-2.5 px-4 bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-700 hover:to-brand-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-[0.98]">
+                            <i class="fa-solid fa-play mr-1"></i> Start Camera
+                        </button>
+                        <button type="button" onclick="copyScanResult()" id="copyScanBtn" disabled
+                            class="py-2.5 px-4 bg-white/60 dark:bg-black/30 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed hover:border-brand-500 transition-all">
+                            <i class="fa-solid fa-copy mr-1"></i> Copy
+                        </button>
+                        <button type="button" onclick="useScanInGenerator()" id="useScanBtn" disabled
+                            class="py-2.5 px-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            <i class="fa-solid fa-arrow-right mr-1"></i> Use in Generator
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Last scan result</label>
+                        <div id="scanResult" class="w-full px-4 py-3 rounded-xl border border-gray-200/60 dark:border-gray-600/60 bg-white/40 dark:bg-black/20 text-sm font-mono text-gray-800 dark:text-gray-100 break-all min-h-[3rem] text-gray-400">
+                            No code scanned yet
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="generateView" class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+                
+                <!-- LEFT COLUMN: Inputs -->
+                <div class="lg:col-span-7 space-y-4 md:space-y-6 animate-fade-in order-1">
+                    
+                    <!-- 1. Type Selector (Tabs) -->
+                    <div class="glass-panel bg-white/60 dark:bg-dark-800/60 rounded-xl p-1.5 shadow-sm flex overflow-x-auto gap-1 no-scrollbar touch-pan-x" id="typeTabs">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- 2. Dynamic Input Form -->
+                    <div class="glass-panel bg-white/80 dark:bg-dark-800/80 rounded-2xl p-4 md:p-6 shadow-lg border-t-4 border-brand-500">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base md:text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2" id="formTitle">
+                                <!-- Icon + Title -->
+                            </h3>
+                            <span class="text-[10px] md:text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-md font-medium" id="typeBadge">URL</span>
+                        </div>
+                        
+                        <div id="dynamicInputs" class="space-y-4">
+                            <!-- Inputs injected here -->
+                        </div>
+                    </div>
+
+                    <!-- 3. Appearance Options -->
+                    <div class="glass-panel bg-white/40 dark:bg-dark-800/40 rounded-2xl p-4 md:p-6 shadow-sm">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Visual Controls</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                            <!-- Colors -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Foreground</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="colorInput" value="#000000" class="h-10 w-12 rounded-lg cursor-pointer border-0 p-1 bg-white/50 dark:bg-black/20 shadow-sm">
+                                        <input type="text" id="colorHex" value="#000000" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-black/20 text-xs font-mono uppercase" readonly>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Background</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="bgColorInput" value="#ffffff" class="h-10 w-12 rounded-lg cursor-pointer border-0 p-1 bg-white/50 dark:bg-black/20 shadow-sm">
+                                        <input type="text" id="bgColorHex" value="#ffffff" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300/50 dark:border-gray-600/50 bg-white/50 dark:bg-black/20 text-xs font-mono uppercase" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Size & Logo -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">
+                                        Resolution: <span id="sizeValue" class="text-brand-600 font-bold">300px</span>
+                                    </label>
+                                    <input type="range" id="sizeInput" min="200" max="1000" step="50" value="300"
+                                        class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-500 touch-none">
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-500 mb-1 block">Branding (Logo) <span class="font-normal normal-case">— max 2 MB</span></label>
+                                    <p id="logoSizeHint" class="text-[10px] text-gray-400 mb-1 hidden"></p>
+                                    <div class="relative">
+                                        <input type="file" id="logoInput" accept="image/*" class="hidden">
+                                        <label for="logoInput" class="flex items-center justify-center w-full px-4 py-2.5 border border-dashed border-gray-400 dark:border-gray-600 rounded-lg cursor-pointer hover:border-brand-500 hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-all group bg-white/20 dark:bg-black/20 active:scale-95">
+                                            <div class="text-center truncate">
+                                                <i class="fa-solid fa-image text-gray-400 group-hover:text-brand-500 mr-2"></i>
+                                                <span class="text-xs text-gray-500 group-hover:text-brand-600" id="logoFileName">Upload PNG/JPG</span>
+                                            </div>
+                                        </label>
+                                        <button onclick="removeLogo()" id="removeLogoBtn" class="hidden absolute right-2 top-2 text-red-500 hover:bg-red-50 p-1 rounded z-10">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Preview -->
+                <div class="lg:col-span-5 order-2">
+                    <div class="lg:sticky lg:top-6 space-y-4">
+                        <div class="glass-panel bg-white/70 dark:bg-dark-800/70 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700 overflow-hidden relative group">
+                            <!-- Preview Header -->
+                            <div class="px-6 py-4 border-b border-gray-100/50 dark:border-gray-700/50 flex justify-between items-center bg-gray-50/30 dark:bg-gray-700/30">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-xs uppercase tracking-wide">Output Preview</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                    <span class="text-[10px] text-gray-500 font-medium">Auto-Sync</span>
+                                </div>
+                            </div>
+
+                            <!-- Canvas Area -->
+                            <div class="p-6 md:p-10 flex flex-col items-center justify-center min-h-[350px] md:min-h-[420px] bg-white/50 dark:bg-black/40 relative transition-colors">
+                                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                                
+                                <!-- The Container for Visual Preview -->
+                                <div id="qrPreviewWrapper" class="relative transition-all duration-300 transform group-hover:scale-[1.02] z-10 max-w-[250px] md:max-w-full">
+                                    <!-- 1. The QR Image (from API) -->
+                                    <img id="qrImage" src="" alt="QR Code" class="rounded-lg shadow-2xl hidden w-full h-auto" crossorigin="anonymous">
+                                    
+                                    <!-- 2. The Logo Overlay (Visual Only) -->
+                                    <img id="logoOverlay" src="" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[22%] h-[22%] object-contain hidden pointer-events-none rounded-md bg-white p-0.5 md:p-1 shadow-sm">
+
+                                    <!-- Placeholder -->
+                                    <div id="qrPlaceholder" class="text-gray-400 flex flex-col items-center animate-pulse">
+                                        <i class="fa-solid fa-qrcode text-5xl md:text-6xl mb-4 opacity-40"></i>
+                                        <p class="font-medium text-[10px] md:text-xs tracking-wider opacity-60">WAITING FOR INPUT</p>
+                                    </div>
+
+                                    <!-- Loader -->
+                                    <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-[2px] rounded-lg hidden z-20">
+                                        <div class="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="p-4 md:p-6 bg-white/50 dark:bg-dark-800/50 border-t border-gray-100/50 dark:border-gray-700/50 backdrop-blur-sm">
+                                <button onclick="downloadQR()" id="downloadBtn" disabled 
+                                    class="w-full py-3.5 px-4 bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-700 hover:to-blue-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 text-sm md:text-base">
+                                    <i class="fa-solid fa-download"></i> Download PNG
+                                </button>
+                                <p class="text-[10px] text-center text-gray-400 mt-3 hidden md:block">
+                                    Generated on your server • High Resolution
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Canvas for Image Composition (Hidden) -->
+    <canvas id="compositionCanvas" class="hidden"></canvas>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 left-6 md:left-auto md:w-auto transform translate-y-24 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <div class="glass-panel bg-dark-900/95 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 border border-gray-700 mx-auto w-fit">
+            <div id="toastIcon" class="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 text-xs">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-sm" id="toastTitle">Success</h4>
+                <p class="text-[10px] text-gray-300" id="toastMsg">Action completed</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
